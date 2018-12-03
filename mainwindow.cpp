@@ -265,6 +265,7 @@ void MainWindow::Dispose_buf_data()
             }
             else if(step==3)
             {
+                Aisle_ID=te;
                 while (data.size()<4)
                 {
                     data += buf[i];
@@ -293,7 +294,7 @@ void MainWindow::Dispose_buf_data()
                         long long a = 0;
                         for (auto i = ss.rbegin(); i !=ss.rend(); i++)
                         {
-                            int n = distance(ss.rbegin(), i);
+                            long long n = distance(ss.rbegin(), i);
                             if (*i >= 'a'&&*i <= 'f')
                             {
                                 a += pow(16, n)*(*i - 'a' + 10);
@@ -306,10 +307,9 @@ void MainWindow::Dispose_buf_data()
                         data.clear();
                         ss=to_string(a);
                         data_number=QString::fromStdString(ss);
-                        //显示处理结果
-                        /*emit Send_Data_To_MainWindow("start")*/;
-                        /*emit Send_Num_Data_To_MainWindow(QPointF(times,a))*/;
+                        /*显示处理结果*/
                         ui->Receive_Window->clear();
+                        ui->receiveID->display(Aisle_ID);
                         ui->Receive_Window->append(QString::fromStdString(to_string(a)));
                         ui->Receive_Window->append(QString::fromLocal8Bit("校验成功，数据合格"));
                         /*LCD显示处理结果-整数*/
@@ -325,7 +325,7 @@ void MainWindow::Dispose_buf_data()
                             angle=((float)a-122880)*12/4096;
                         }
 
-                        ui->dis_ang_sdj->display(QString("%1").arg(angle));
+                        ui->dis_ang_sdj->display(QString("%1").arg((double)angle));
                         /*emit Send_Angle_Data_To_MainWindow("start",angle)*/;//将计算好的角度信息实时传递给主窗口
                         /*Draw_Sector()*/;
                         /*建立存储文件*/
@@ -382,7 +382,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QRectF outRect1(50, 80, 200, 200);
     QRectF inRect1(70, 100, 200 - 40, 200 - 40);
     //转换需要绘出的值
-    QString valueStr1 = QString("%1"+QString::fromLocal8Bit("度")).arg(QString::number(angle));
+    QString valueStr1 = QString("%1"+QString::fromLocal8Bit("度")).arg(QString::number((double)angle));
 
     //画外圆
     painter1.setPen(Qt::NoPen);
@@ -401,6 +401,37 @@ void MainWindow::paintEvent(QPaintEvent *event)
     painter1.setPen(QColor("#555555"));
     painter1.drawText(inRect1, Qt::AlignCenter, valueStr1);
     //painter1.end();
+
+    /* 绘制第二个圆环 */
+
+    QPainter painter2(this);
+    painter2.setRenderHint(QPainter::Antialiasing);//设置圆滑绘制风格（抗锯齿）
+   //绘制圆环
+    float m_persent2 = angle+90;//此处我画80%
+    int m_rotateAngle2 = 180* (1 - m_persent2 / 180);
+    //int side1 = qMin(width(), height());
+    //定义矩形绘制区域
+    QRectF outRect2(50, 280, 200, 200);
+    QRectF inRect2(70, 300, 200 - 40, 200 - 40);
+    //转换需要绘出的值
+    QString valueStr2 = QString("%1"+QString::fromLocal8Bit("度")).arg(QString::number((double)angle));
+
+    //画外圆
+    painter2.setPen(Qt::NoPen);
+    painter2.setBrush(QBrush(QColor(255, 107, 107)));//红色
+    painter2.drawPie(outRect2, 0 * 16, 180 * 16);
+    //画内圆
+    painter2.setBrush(QBrush(QColor(97, 117, 118)));//黑色
+    painter2.drawPie(outRect2, 0 * 16, m_rotateAngle2 * 16);
+    //画遮罩，遮罩颜色为窗口颜色
+    painter2.setBrush(palette().window().color());
+    painter2.drawEllipse(inRect2);
+    //画文字
+    QFont f2 = QFont("Microsoft YaHei", 15, QFont::Bold);
+    painter2.setFont(f2);
+    painter2.setFont(f2);
+    painter2.setPen(QColor("#555555"));
+    painter2.drawText(inRect2, Qt::AlignCenter, valueStr2);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)

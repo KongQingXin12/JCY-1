@@ -56,9 +56,13 @@ private slots:
 
     void on_save_receive_data_clicked();
 
+    void on_refresh_serial_port_clicked();
+
     /* 自定义函数 */
 
     void Read_Data();
+
+    void Dispose_buf_data();
 
     bool warrning();
 
@@ -66,7 +70,6 @@ private slots:
 
     void Search_Serial_Port();
 
-    void on_refresh_serial_port_clicked();
 
 signals:
 //    void Send_Data_To_MainWindow(QString te);
@@ -75,19 +78,18 @@ signals:
 
 protected:
     void keyPressEvent(QKeyEvent *event);
-    void Dispose_buf_data();
     void paintEvent(QPaintEvent *event);
 
 private:
     Ui::MainWindow *ui;
 
-    //需要清零
+    /*需要清零*/
     QByteArray buf,Check,erc,data;
     int step=0;
     char te='\x00';
     int times=0;
 
-    //不需要清零
+    /*不需要清零*/
     QSerialPort *serial;
     QString Save_filename;
     QString Open_filename;
@@ -98,7 +100,7 @@ private:
     QString data_number;
     QString AD_Number;
     float angle=0;
-
+    QString Aisle_ID;
     QTimer *UpdatePainterTimer;
 };
 
