@@ -30,6 +30,7 @@
 #include <QPointF>
 #include <QString>
 #include <QPaintEvent>
+#include <bits/stdc++.h>
 using namespace std;
 
 namespace Ui {
@@ -64,6 +65,8 @@ private slots:
 
     void Dispose_buf_data();
 
+    void Dispose_buf_data_jcy();
+
     bool warrning();
 
     bool data_Check(QByteArray data,QByteArray erc);
@@ -88,6 +91,7 @@ private:
     int step=0;
     char te='\x00';
     int times=0;
+    long long ItemIndex=0;
 
     /*不需要清零*/
     QSerialPort *serial;

@@ -22,8 +22,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //关闭发送按钮使能
 
     ui->SendDataButton->setEnabled(false);
-    qDebug()<<QString::fromLocal8Bit("界面设定成功");
-    qDebug()<<QString::fromLocal8Bit("搜寻串口成功");
+    qDebug()<<tr("界面设定成功");
+    qDebug()<<tr("搜寻串口成功");
 }
 
 bool MainWindow::evenFilter(QObject *obj, QEvent *event)
@@ -50,15 +50,15 @@ void MainWindow::handleTimeout()
 void MainWindow::on_open_serial_clicked()
 {
     //判断文件
-    if(ui->open_serial->text()==QString::fromLocal8Bit("打开串口")&&warrning())
+    if(ui->open_serial->text()==tr("打开串口")&&warrning())
     {
         serial= new QSerialPort;
         //设置串口名
         serial->setPortName(ui->PortBox->currentText());
-        qDebug()<<QString::fromLocal8Bit("设置串口名成功");
+        qDebug()<<tr("设置串口名成功");
         //打开串口
         serial->open(QIODevice::ReadWrite);
-        qDebug()<<QString::fromLocal8Bit("打开串口成功");
+        qDebug()<<tr("打开串口成功");
         //设置波特率
         serial->setBaudRate(ui->BaudBox->currentText().toInt());
         //设置数据位
@@ -67,15 +67,26 @@ void MainWindow::on_open_serial_clicked()
         {
         case 0:
             serial->setDataBits(QSerialPort::Data8);
-            qDebug() << QString::fromLocal8Bit("设置数据位成功");
+            qDebug() << tr("设置数据位成功");
             break;
         }
         //设置奇偶校验位
+        QString ParityStrValue=ui->ParityBox->currentText();
         switch (ui->ParityBox->currentIndex())
         {
         case 0:
             serial->setParity(QSerialPort::NoParity);
-            qDebug()<<QString::fromLocal8Bit("设置奇偶校验位成功");
+            qDebug()<<tr("设置奇偶校验位成功");
+            break;
+        case 1:
+            serial->setParity(QSerialPort::OddParity);
+            //            cout<<"设置偶校验位成功"<<endl;
+            //            qDebug()<<QString::fromLocal8Bit("设置偶校验位成功");
+            qDebug()<<tr("设置偶校验位成功");
+            break;
+        case 2:
+            serial->setParity(QSerialPort::EvenParity);
+            qDebug()<<tr("设置奇校验位成功");
             break;
         default:break;
         }
@@ -84,11 +95,11 @@ void MainWindow::on_open_serial_clicked()
         {
         case 0:
             serial->setStopBits(QSerialPort::OneStop);
-            qDebug()<<QString::fromLocal8Bit("设置停止位0成功");
+            qDebug()<<tr("设置停止位0成功");
             break;
         case 1:
-              serial->setStopBits(QSerialPort::TwoStop);
-              qDebug()<<QString::fromLocal8Bit("设置停止位1成功");
+            serial->setStopBits(QSerialPort::TwoStop);
+            qDebug()<<tr("设置停止位1成功");
             break;
         default:break;
         }
@@ -102,31 +113,32 @@ void MainWindow::on_open_serial_clicked()
         ui->BitBox->setEnabled(false);
         ui->ParityBox->setEnabled(false);
         ui->StopBox->setEnabled(false);
-        ui->open_serial->setText(QString::fromLocal8Bit("关闭串口"));
+        ui->open_serial->setText(tr("关闭串口"));
         ui->SendDataButton->setEnabled(true);
-        qDebug()<<QString::fromLocal8Bit("打开串口成功");
+        qDebug()<<tr("打开串口成功");
         //连接信号槽
         QObject::connect(serial,&QSerialPort::readyRead,this,&MainWindow::Read_Data);
 
     }
-    else if(ui->open_serial->text()==QString::fromLocal8Bit("关闭串口"))
+    else if(ui->open_serial->text()==tr("关闭串口"))
     {
-      /*  emit Send_Data_To_MainWindow("port_close")*/
-       // times++;
+        /*  emit Send_Data_To_MainWindow("port_close")*/
+        // times++;
         //关闭串口
         serial->clear();
         serial->close();
         serial->deleteLater();
         //恢复设置使能
-       // ui->PortBox->setEnabled(true);
+        // ui->PortBox->setEnabled(true);
         ui->PortBox->setEnabled(true);
         ui->BaudBox->setEnabled(true);
         ui->BitBox->setEnabled(true);
         ui->ParityBox->setEnabled(true);
         ui->StopBox->setEnabled(true);
-        ui->open_serial->setText(QString::fromLocal8Bit("打开串口"));
+        ui->open_serial->setText(tr("打开串口"));
         ui->SendDataButton->setEnabled(false);
         file->close();
+//        ItemIndex=1;
     }
 
 }
@@ -135,7 +147,7 @@ void MainWindow::Read_Data()
 {
     buf += serial->readAll();
     str_time=time1.toString("yyyy-MM-dd hh:mm:ss");
-    Dispose_buf_data();
+    Dispose_buf_data_jcy();
 }
 
 void MainWindow::on_ClearDataButton_clicked()
@@ -172,7 +184,7 @@ bool MainWindow::warrning()
 {
     if(Open_filename==QString())
     {
-        QMessageBox::information(nullptr,"critical",QString::fromLocal8Bit("没有选择存储路径"),QMessageBox::Yes);
+        QMessageBox::information(nullptr,"critical",tr("没有选择存储路径"),QMessageBox::Yes);
         return false;
     }
     return true;
@@ -202,7 +214,7 @@ void MainWindow::Search_Serial_Port()
         serial.setPort(info);
         auto a = info.description();
         //qDebug() << a;
-        if (a == QString::fromLocal8Bit("蓝牙链接上的标准串行"))
+        if (a == tr("蓝牙链接上的标准串行"))
         {
             continue;
         }
@@ -240,7 +252,7 @@ void MainWindow::Dispose_buf_data()
                     AD_Number="AD_01";
                     step=3;
                     break;
-                case '\02':
+                case '\x02':
                     te='\x02';
                     AD_Number="AD_02";
                     step=3;
@@ -311,7 +323,7 @@ void MainWindow::Dispose_buf_data()
                         ui->Receive_Window->clear();
                         ui->receiveID->display(Aisle_ID);
                         ui->Receive_Window->append(QString::fromStdString(to_string(a)));
-                        ui->Receive_Window->append(QString::fromLocal8Bit("校验成功，数据合格"));
+                        ui->Receive_Window->append(tr("校验成功，数据合格"));
                         /*LCD显示处理结果-整数*/
                         ui->dis_num_sdj->display(data_number);
                         /*LCD显示处理结果-角度*/
@@ -333,7 +345,7 @@ void MainWindow::Dispose_buf_data()
                         QFile file(Save_filename);
                         if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
                         {
-                           file.close();
+                            file.close();
                         }
                         QTextStream in(&file);
                         in << str_time + " " + "55aa" +" "<< a << " " + erc.toHex() << "\r\n";
@@ -344,7 +356,7 @@ void MainWindow::Dispose_buf_data()
                         if(data.size()==4)
                             data.clear();
                         ui->Receive_Window->clear();
-                        ui->Receive_Window->append(QString::fromLocal8Bit("校验失败"));
+                        ui->Receive_Window->append(tr("校验失败"));
                     }
                     if (buf.size() == 8)
                         buf.clear();
@@ -363,9 +375,69 @@ void MainWindow::Dispose_buf_data()
     {
         times=0;
         ui->Receive_Window->clear();
-        ui->Receive_Window->append(QString::fromLocal8Bit("串口停止发送数据"));
+        ui->Receive_Window->append(tr("串口停止发送数据"));
     }
 
+}
+
+void MainWindow::Dispose_buf_data_jcy()
+{
+    if (buf.size()>=10){
+        int flag=0;
+        char jiaoyanhe='\x00';
+        for (int i=0;i<buf.size();i++) {
+            switch (i) {
+            case 0:
+                if(buf[i]=='\x55'&&flag==0){
+                    flag=1;
+                }else{
+                    flag=0;
+                }
+                break;
+            case 8:
+                if (jiaoyanhe==buf[i]&&flag==1){
+                    ItemIndex+=1;
+                    qDebug()<<ItemIndex<<" "<<tr("校验合格，校验和正确");
+                    //                ui->Receive_Window->append(tr("校验合格，校验和正确"));
+                }else{
+                    qDebug()<<tr("校验失败，校验和不正确");
+                    //                ui->Receive_Window->append(tr("校验失败，校验和不正确"));
+                }
+                break;
+            case 9:
+                if (flag==1){
+                    if (buf[i]=='\xcc'){
+                        ui->Receive_Window->append(QString::number(ItemIndex) + " "+ tr(" 数据正确"));
+                        ui->receiveID->display(QString::number(ItemIndex));
+                    }else{
+                        ui->Receive_Window->append(QString::number(ItemIndex) + " "+ tr(" 数据错误"));
+                    }
+                }
+                break;
+            default:
+                if(flag==1){
+                    jiaoyanhe+=buf[i];
+                    jiaoyanhe&='\xff';
+                }
+            }
+        }
+        Save_filename=Open_filename+" " +time1.toString("hh.mm.ss")+".txt";
+        QFile file(Save_filename);
+        if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
+        {
+            file.close();
+        }
+        QTextStream in(&file);
+        in << QString::number(ItemIndex)<<"\t";
+        QString a=buf.toHex();
+        for(int i=0;i<a.size();i+=2){
+            in<<"0x"+a.mid(i,2)<<" ";
+          }
+//        in<<QString::fromStdString(a.toStdString())<<" ";
+        in<< "\r\n";
+        file.close();
+        buf.clear();
+    }
 }
 
 void MainWindow::paintEvent(QPaintEvent *event)
@@ -374,7 +446,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QPainter painter1(this);
     //painter1.begin(this);
     painter1.setRenderHint(QPainter::Antialiasing);//设置圆滑绘制风格（抗锯齿）
-   //绘制圆环
+    //绘制圆环
     float m_persent1 = angle+90;//此处我画80%
     int m_rotateAngle1 = 180* (1 - m_persent1 / 180);
     //int side1 = qMin(width(), height());
@@ -382,7 +454,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QRectF outRect1(50, 80, 200, 200);
     QRectF inRect1(70, 100, 200 - 40, 200 - 40);
     //转换需要绘出的值
-    QString valueStr1 = QString("%1"+QString::fromLocal8Bit("度")).arg(QString::number((double)angle));
+    QString valueStr1 = QString("%1"+tr("度")).arg(QString::number((double)angle));
 
     //画外圆
     painter1.setPen(Qt::NoPen);
@@ -406,7 +478,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
 
     QPainter painter2(this);
     painter2.setRenderHint(QPainter::Antialiasing);//设置圆滑绘制风格（抗锯齿）
-   //绘制圆环
+    //绘制圆环
     float m_persent2 = angle+90;//此处我画80%
     int m_rotateAngle2 = 180* (1 - m_persent2 / 180);
     //int side1 = qMin(width(), height());
@@ -414,7 +486,7 @@ void MainWindow::paintEvent(QPaintEvent *event)
     QRectF outRect2(50, 280, 200, 200);
     QRectF inRect2(70, 300, 200 - 40, 200 - 40);
     //转换需要绘出的值
-    QString valueStr2 = QString("%1"+QString::fromLocal8Bit("度")).arg(QString::number((double)angle));
+    QString valueStr2 = QString("%1"+tr("度")).arg(QString::number((double)angle));
 
     //画外圆
     painter2.setPen(Qt::NoPen);
