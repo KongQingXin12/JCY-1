@@ -157,7 +157,13 @@ void MainWindow::on_open_serial_clicked()
 void MainWindow::Read_Data()
 {
     buf += serial->readAll();
-    str_time=time1.toString("yyyy-MM-dd hh:mm:ss");
+    str_time=time1.toString("yyyy.MM.dd.hh.mm");
+    Save_filename=Open_filename+str_time+".txt";
+    QFile file(Save_filename);
+    if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
+    {
+        file.close();
+    }
     Dispose_buf_data_jcy();
 }
 
@@ -243,7 +249,7 @@ void MainWindow::Dispose_buf_data_jcy()
         for (int i=0;i<buf.size();i++) {
             switch (i) {
             case 0:
-                if(buf[i]=='\x55'&&flag==0){
+                if(buf[i]=='\x50'&&flag==0){
                     flag=1;
                 }else{
                     flag=0;
@@ -252,15 +258,14 @@ void MainWindow::Dispose_buf_data_jcy()
             case 8:
                 if (jiaoyanhe==buf[i]&&flag==1){
                     qDebug()<<ItemIndex<<" "<<tr("校验合格，校验和正确");
-                    //                ui->Receive_Window->append(tr("校验合格，校验和正确"));
                 }else{
-                    qDebug()<<tr("校验失败，校验和不正确");
-                    //                ui->Receive_Window->append(tr("校验失败，校验和不正确"));
+                    flag=0;
+                    qDebug()<<ItemIndex<<" "<<tr("校验失败，校验和不正确");
                 }
                 break;
             case 9:
                 if (flag==1){
-                    if (buf[i]=='\xcc'){
+                    if (buf[i]=='\xd0'){
                         ui->Receive_Window->append(QString::number(ItemIndex) + "\t"+ tr(" 数据正确"));
                         ui->BandA_R->display(QString::number(ItemIndex));
                     }else{
@@ -276,7 +281,7 @@ void MainWindow::Dispose_buf_data_jcy()
             }
         }
         ItemIndex+=1;
-        Save_filename=Open_filename+" " +time1.toString("hh.mm.ss")+".txt";
+        Save_filename=Open_filename+str_time+".txt";
         QFile file(Save_filename);
         if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
         {
@@ -284,9 +289,9 @@ void MainWindow::Dispose_buf_data_jcy()
         }
         QTextStream in(&file);
         in << QString::number(ItemIndex)<<"\t";
-        QString a=buf.toHex();
-        for(int i=0;i<a.size();i+=2){
-            in<<"0x"+a.mid(i,2)<<" ";
+        QString buf_qstr=buf.toHex();
+        for(int i=0;i<buf_qstr.size();i+=2){
+            in<<"0x"+buf_qstr.mid(i,2)<<" ";
           }
 //        in<<QString::fromStdString(a.toStdString())<<" ";
         in<< "\r\n";

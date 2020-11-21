@@ -93,13 +93,14 @@ private:
     char te='\x00';
     int times=0;
     long long ItemIndex=0;
+    long long Anum=0,Bnum=0,Cnum=0;
 
     /*不需要清零*/
     QSerialPort *serial;
     QString Save_filename;
     QString Open_filename;
     QString str_time;
-    QDateTime time1;
+    QDateTime time1=QDateTime::currentDateTime();
     QDir *dir=new QDir();
     QFile *file=new QFile();
     QString data_number;
