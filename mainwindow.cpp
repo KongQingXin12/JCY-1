@@ -6,7 +6,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->sector_dis->installEventFilter(this);
+//    ui->sector_dis->installEventFilter(this);
     UpdatePainterTimer =new QTimer;
     UpdatePainterTimer->setInterval(500);
     connect(UpdatePainterTimer,&QTimer::timeout,this,&MainWindow::handleTimeout);
@@ -44,7 +44,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::handleTimeout()
 {
-    ui->sector_dis->update();
+//    ui->sector_dis->update();
 }
 
 void MainWindow::on_open_serial_clicked()
@@ -114,7 +114,12 @@ void MainWindow::on_open_serial_clicked()
         ui->ParityBox->setEnabled(false);
         ui->StopBox->setEnabled(false);
         ui->open_serial->setText(tr("关闭串口"));
-        ui->SendDataButton->setEnabled(true);
+        //按钮功能失能
+        ui->save_receive_data->setEnabled(false);
+        ui->refresh_serial_port->setEnabled(false);
+        ui->Open_data->setEnabled(false);
+        //按钮功能使能
+         ui->SendDataButton->setEnabled(true);
         qDebug()<<tr("打开串口成功");
         //连接信号槽
         QObject::connect(serial,&QSerialPort::readyRead,this,&MainWindow::Read_Data);
@@ -129,7 +134,6 @@ void MainWindow::on_open_serial_clicked()
         serial->close();
         serial->deleteLater();
         //恢复设置使能
-        // ui->PortBox->setEnabled(true);
         ui->PortBox->setEnabled(true);
         ui->BaudBox->setEnabled(true);
         ui->BitBox->setEnabled(true);
@@ -137,7 +141,14 @@ void MainWindow::on_open_serial_clicked()
         ui->StopBox->setEnabled(true);
         ui->open_serial->setText(tr("打开串口"));
         ui->SendDataButton->setEnabled(false);
-        file->close();
+        time1=QDateTime::currentDateTime();
+        ItemIndex=0;
+        qDebug()<<tr("复位成功");
+        //按钮功能使能
+        ui->SendDataButton->setEnabled(true);
+        ui->save_receive_data->setEnabled(true);
+        ui->refresh_serial_port->setEnabled(true);
+        ui->Open_data->setEnabled(true);
 //        ItemIndex=1;
     }
 
@@ -157,7 +168,7 @@ void MainWindow::on_ClearDataButton_clicked()
 
 void MainWindow::on_SendDataButton_clicked()
 {
-    serial->write(ui->Send_Window->toPlainText().toLatin1());
+//    serial->write(ui->Send_Window->toPlainText().toLatin1());
 }
 
 void MainWindow::on_save_receive_data_clicked()
@@ -190,22 +201,6 @@ bool MainWindow::warrning()
     return true;
 }
 
-bool MainWindow::data_Check(QByteArray data, QByteArray erc)
-{
-    QString d=data.toHex();
-    QString e=erc.toHex();
-    auto i=d.rbegin();
-    auto j=e.rbegin();
-    for(;j!=e.rend();i++,j++)
-    {
-        if(*i!=*j)
-        {
-            return false;
-        }
-    }
-    return true;
-}
-
 void MainWindow::Search_Serial_Port()
 {
     foreach(const  QSerialPortInfo &info, QSerialPortInfo::availablePorts())
@@ -213,171 +208,31 @@ void MainWindow::Search_Serial_Port()
         QSerialPort serial;
         serial.setPort(info);
         auto a = info.description();
+//        auto aa=info.portName();
         //qDebug() << a;
-        if (a == tr("蓝牙链接上的标准串行"))
+        if (a == tr("蓝牙链接上的标准串行")||a==tr("JLink CDC UART Port"))
         {
             continue;
         }
         else
         {
-            ui->PortBox->addItem(serial.portName());
+            if(ui->PortBox->findText(serial.portName())==-1){
+                ui->PortBox->addItem(serial.portName());
+              }
             serial.close();
         }
-    }
+      }
 }
 
-
-void MainWindow::Dispose_buf_data()
+void MainWindow::loadfile(const QString &filename)
 {
-
-    if(buf.size()>=16)
-    {
-        for(int i=0;i<buf.size();i++)
-        {
-            if(buf[i]=='\x55')
-            {
-                step=1;
-            }
-            else if(buf[i]=='\xaa')
-            {
-                step=2;
-            }
-            else if(step==2)
-            {
-                te='\x00';
-                switch (buf[i])
-                {
-                case '\x01':
-                    te='\x01';
-                    AD_Number="AD_01";
-                    step=3;
-                    break;
-                case '\x02':
-                    te='\x02';
-                    AD_Number="AD_02";
-                    step=3;
-                    break;
-                case '\x03':
-                    te='\x03';
-                    AD_Number="AD_03";
-                    break;
-                    step=3;
-                    break;
-                case '\x04':
-                    te='\x04';
-                    AD_Number="AD_04";
-                    step=3;
-                    break;
-                case '\x06':
-                    te='\x06';
-                    AD_Number="AD_06";
-                    step=3;
-                    break;
-                }
-            }
-            else if(step==3)
-            {
-                Aisle_ID=te;
-                while (data.size()<4)
-                {
-                    data += buf[i];
-                    te+=buf[i];
-                    i++;
-                }
-                if(data.size()==4)
-                {
-                    te=te&'\xff';
-                    Check+=te;
-                    step=4;
-                    te='\x00';
-                    i--;
-                }
-            }
-            else if(step==4)
-            {
-                erc+=buf[i];
-                step++;
-                if (step == 5)
-                {
-                    if (data_Check(Check, erc))
-                    {
-                        times++;
-                        string ss = data.toHex().toStdString();
-                        long long a = 0;
-                        for (auto i = ss.rbegin(); i !=ss.rend(); i++)
-                        {
-                            long long n = distance(ss.rbegin(), i);
-                            if (*i >= 'a'&&*i <= 'f')
-                            {
-                                a += pow(16, n)*(*i - 'a' + 10);
-                            }
-                            else
-                            {
-                                a += pow(16, n)*(*i - '0');
-                            }
-                        }
-                        data.clear();
-                        ss=to_string(a);
-                        data_number=QString::fromStdString(ss);
-                        /*显示处理结果*/
-                        ui->Receive_Window->clear();
-                        ui->receiveID->display(Aisle_ID);
-                        ui->Receive_Window->append(QString::fromStdString(to_string(a)));
-                        ui->Receive_Window->append(tr("校验成功，数据合格"));
-                        /*LCD显示处理结果-整数*/
-                        ui->dis_num_sdj->display(data_number);
-                        /*LCD显示处理结果-角度*/
-
-                        if(a<=61440)
-                        {
-                            angle=(float)a*12/4096;
-                        }
-                        else
-                        {
-                            angle=((float)a-122880)*12/4096;
-                        }
-
-                        ui->dis_ang_sdj->display(QString("%1").arg((double)angle));
-                        /*emit Send_Angle_Data_To_MainWindow("start",angle)*/;//将计算好的角度信息实时传递给主窗口
-                        /*Draw_Sector()*/;
-                        /*建立存储文件*/
-                        Save_filename=Open_filename+AD_Number+" " +time1.toString("hh.mm.ss")+".txt";
-                        QFile file(Save_filename);
-                        if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
-                        {
-                            file.close();
-                        }
-                        QTextStream in(&file);
-                        in << str_time + " " + "55aa" +" "<< a << " " + erc.toHex() << "\r\n";
-                        file.close();
-                    }
-                    else
-                    {
-                        if(data.size()==4)
-                            data.clear();
-                        ui->Receive_Window->clear();
-                        ui->Receive_Window->append(tr("校验失败"));
-                    }
-                    if (buf.size() == 8)
-                        buf.clear();
-                    else
-                        buf = buf.mid(i);
-                    step = 0;
-                    Check.clear();
-                    erc.clear();
-                    break;
-                }
-
-            }
-        }
+  QFile file(filename);
+  if (!file.open(QFile::ReadOnly|QFile::Text)){
+      QMessageBox::warning(this,tr("Application"),tr("不能打开文件%1:\n%2.").arg(QDir::toNativeSeparators(filename),file.errorString()));
+      return;
     }
-    else if(step==0&&erc==nullptr&&Check==nullptr)
-    {
-        times=0;
-        ui->Receive_Window->clear();
-        ui->Receive_Window->append(tr("串口停止发送数据"));
-    }
-
+  QTextStream in(&file);
+  ui->Send_Window->setPlainText(in.readAll());
 }
 
 void MainWindow::Dispose_buf_data_jcy()
@@ -396,7 +251,6 @@ void MainWindow::Dispose_buf_data_jcy()
                 break;
             case 8:
                 if (jiaoyanhe==buf[i]&&flag==1){
-                    ItemIndex+=1;
                     qDebug()<<ItemIndex<<" "<<tr("校验合格，校验和正确");
                     //                ui->Receive_Window->append(tr("校验合格，校验和正确"));
                 }else{
@@ -407,10 +261,10 @@ void MainWindow::Dispose_buf_data_jcy()
             case 9:
                 if (flag==1){
                     if (buf[i]=='\xcc'){
-                        ui->Receive_Window->append(QString::number(ItemIndex) + " "+ tr(" 数据正确"));
-                        ui->receiveID->display(QString::number(ItemIndex));
+                        ui->Receive_Window->append(QString::number(ItemIndex) + "\t"+ tr(" 数据正确"));
+                        ui->BandA_R->display(QString::number(ItemIndex));
                     }else{
-                        ui->Receive_Window->append(QString::number(ItemIndex) + " "+ tr(" 数据错误"));
+                        ui->Receive_Window->append(QString::number(ItemIndex) + "\t"+ tr(" 数据错误"));
                     }
                 }
                 break;
@@ -421,6 +275,7 @@ void MainWindow::Dispose_buf_data_jcy()
                 }
             }
         }
+        ItemIndex+=1;
         Save_filename=Open_filename+" " +time1.toString("hh.mm.ss")+".txt";
         QFile file(Save_filename);
         if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
@@ -437,73 +292,8 @@ void MainWindow::Dispose_buf_data_jcy()
         in<< "\r\n";
         file.close();
         buf.clear();
+
     }
-}
-
-void MainWindow::paintEvent(QPaintEvent *event)
-{
-    /* 绘制第一个圆环 */
-    QPainter painter1(this);
-    //painter1.begin(this);
-    painter1.setRenderHint(QPainter::Antialiasing);//设置圆滑绘制风格（抗锯齿）
-    //绘制圆环
-    float m_persent1 = angle+90;//此处我画80%
-    int m_rotateAngle1 = 180* (1 - m_persent1 / 180);
-    //int side1 = qMin(width(), height());
-    //定义矩形绘制区域
-    QRectF outRect1(50, 80, 200, 200);
-    QRectF inRect1(70, 100, 200 - 40, 200 - 40);
-    //转换需要绘出的值
-    QString valueStr1 = QString("%1"+tr("度")).arg(QString::number((double)angle));
-
-    //画外圆
-    painter1.setPen(Qt::NoPen);
-    painter1.setBrush(QBrush(QColor(255, 107, 107)));//红色
-    painter1.drawPie(outRect1, 0 * 16, 180 * 16);
-    //画内圆
-    painter1.setBrush(QBrush(QColor(97, 117, 118)));//黑色
-    painter1.drawPie(outRect1, 0 * 16, m_rotateAngle1 * 16);
-    //画遮罩，遮罩颜色为窗口颜色
-    painter1.setBrush(palette().window().color());
-    painter1.drawEllipse(inRect1);
-    //画文字
-    QFont f1 = QFont("Microsoft YaHei", 15, QFont::Bold);
-    painter1.setFont(f1);
-    painter1.setFont(f1);
-    painter1.setPen(QColor("#555555"));
-    painter1.drawText(inRect1, Qt::AlignCenter, valueStr1);
-    //painter1.end();
-
-    /* 绘制第二个圆环 */
-
-    QPainter painter2(this);
-    painter2.setRenderHint(QPainter::Antialiasing);//设置圆滑绘制风格（抗锯齿）
-    //绘制圆环
-    float m_persent2 = angle+90;//此处我画80%
-    int m_rotateAngle2 = 180* (1 - m_persent2 / 180);
-    //int side1 = qMin(width(), height());
-    //定义矩形绘制区域
-    QRectF outRect2(50, 280, 200, 200);
-    QRectF inRect2(70, 300, 200 - 40, 200 - 40);
-    //转换需要绘出的值
-    QString valueStr2 = QString("%1"+tr("度")).arg(QString::number((double)angle));
-
-    //画外圆
-    painter2.setPen(Qt::NoPen);
-    painter2.setBrush(QBrush(QColor(255, 107, 107)));//红色
-    painter2.drawPie(outRect2, 0 * 16, 180 * 16);
-    //画内圆
-    painter2.setBrush(QBrush(QColor(97, 117, 118)));//黑色
-    painter2.drawPie(outRect2, 0 * 16, m_rotateAngle2 * 16);
-    //画遮罩，遮罩颜色为窗口颜色
-    painter2.setBrush(palette().window().color());
-    painter2.drawEllipse(inRect2);
-    //画文字
-    QFont f2 = QFont("Microsoft YaHei", 15, QFont::Bold);
-    painter2.setFont(f2);
-    painter2.setFont(f2);
-    painter2.setPen(QColor("#555555"));
-    painter2.drawText(inRect2, Qt::AlignCenter, valueStr2);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *event)
@@ -517,5 +307,10 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
     }
 }
 
-
-
+void MainWindow::on_Open_data_clicked()
+{
+//  QDir temp(Save_filename);
+  QString filename=QFileDialog::getOpenFileName(this);
+  if(!filename.isEmpty())
+    loadfile(filename);
+}

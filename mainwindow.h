@@ -30,6 +30,7 @@
 #include <QPointF>
 #include <QString>
 #include <QPaintEvent>
+#include <QPlainTextEdit>
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -59,20 +60,20 @@ private slots:
 
     void on_refresh_serial_port_clicked();
 
+    void on_Open_data_clicked();
+
+
     /* 自定义函数 */
 
     void Read_Data();
-
-    void Dispose_buf_data();
 
     void Dispose_buf_data_jcy();
 
     bool warrning();
 
-    bool data_Check(QByteArray data,QByteArray erc);
-
     void Search_Serial_Port();
 
+    void loadfile(const QString &filename);
 
 signals:
 //    void Send_Data_To_MainWindow(QString te);
@@ -81,7 +82,7 @@ signals:
 
 protected:
     void keyPressEvent(QKeyEvent *event);
-    void paintEvent(QPaintEvent *event);
+//    void paintEvent(QPaintEvent *event);
 
 private:
     Ui::MainWindow *ui;
@@ -98,7 +99,7 @@ private:
     QString Save_filename;
     QString Open_filename;
     QString str_time;
-    QDateTime time1=QDateTime::currentDateTime();
+    QDateTime time1;
     QDir *dir=new QDir();
     QFile *file=new QFile();
     QString data_number;
@@ -106,6 +107,7 @@ private:
     float angle=0;
     QString Aisle_ID;
     QTimer *UpdatePainterTimer;
+    QPlainTextEdit textEdit;
 };
 
 #endif // MAINWINDOW_H
