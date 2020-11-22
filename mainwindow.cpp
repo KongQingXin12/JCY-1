@@ -7,10 +7,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 //    ui->sector_dis->installEventFilter(this);
-    UpdatePainterTimer =new QTimer;
-    UpdatePainterTimer->setInterval(500);
-    connect(UpdatePainterTimer,&QTimer::timeout,this,&MainWindow::handleTimeout);
-    UpdatePainterTimer->start();
+//    UpdatePainterTimer =new QTimer;
+//    UpdatePainterTimer->setInterval(500);
+//    connect(UpdatePainterTimer,&QTimer::timeout,this,&MainWindow::handleTimeout);
+//    UpdatePainterTimer->start();
 
     //查找可用串口
     //emit Send_Data_To_MainWindow("111");
@@ -243,7 +243,7 @@ void MainWindow::loadfile(const QString &filename)
 
 void MainWindow::Dispose_buf_data_jcy()
 {
-    if (buf.size()>=10){
+    if (buf.size()>=11){
         int flag=0;
         char jiaoyanhe='\x00';
         for (int i=0;i<buf.size();i++) {
@@ -255,7 +255,7 @@ void MainWindow::Dispose_buf_data_jcy()
                     flag=0;
                 }
                 break;
-            case 8:
+            case 9:
                 if (jiaoyanhe==buf[i]&&flag==1){
                     qDebug()<<ItemIndex<<" "<<tr("校验合格，校验和正确");
                 }else{
@@ -263,11 +263,12 @@ void MainWindow::Dispose_buf_data_jcy()
                     qDebug()<<ItemIndex<<" "<<tr("校验失败，校验和不正确");
                 }
                 break;
-            case 9:
+            case 10:
                 if (flag==1){
-                    if (buf[i]=='\xd0'){
+                    if (buf[i]=='\xD0'){
                         ui->Receive_Window->append(QString::number(ItemIndex) + "\t"+ tr(" 数据正确"));
                         ui->BandA_R->display(QString::number(ItemIndex));
+                        ItemIndex+=1;
                     }else{
                         ui->Receive_Window->append(QString::number(ItemIndex) + "\t"+ tr(" 数据错误"));
                     }
@@ -280,24 +281,25 @@ void MainWindow::Dispose_buf_data_jcy()
                 }
             }
         }
-        ItemIndex+=1;
-        Save_filename=Open_filename+str_time+".txt";
-        QFile file(Save_filename);
-        if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
-        {
+        if(flag==1){
+            Save_filename=Open_filename+str_time+".txt";
+            QFile file(Save_filename);
+            if(!file.open(QIODevice::WriteOnly|QIODevice::Append))
+            {
+                file.close();
+            }
+            QTextStream in(&file);
+            in << QString::number(ItemIndex)<<"\t";
+            QString buf_qstr=buf.toHex();
+            for(int i=0;i<buf_qstr.size();i+=2){
+                in<<"0x"+buf_qstr.mid(i,2)<<" ";
+              }
+    //        in<<QString::fromStdString(a.toStdString())<<" ";
+            in<< "\r\n";
             file.close();
-        }
-        QTextStream in(&file);
-        in << QString::number(ItemIndex)<<"\t";
-        QString buf_qstr=buf.toHex();
-        for(int i=0;i<buf_qstr.size();i+=2){
-            in<<"0x"+buf_qstr.mid(i,2)<<" ";
+            flag=0;
           }
-//        in<<QString::fromStdString(a.toStdString())<<" ";
-        in<< "\r\n";
-        file.close();
         buf.clear();
-
     }
 }
 
