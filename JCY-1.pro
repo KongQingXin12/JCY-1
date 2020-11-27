@@ -25,13 +25,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+        functions.cpp \
+        linechart.cpp \
         main.cpp \
         mainwindow.cpp
 
 HEADERS += \
+        functions.h \
+        linechart.h \
         mainwindow.h
 
 FORMS += \
+        linechart.ui \
         mainwindow.ui
 
 # Default rules for deployment.

@@ -67,6 +67,11 @@
               </item>
               <item>
                <property name="text">
+                <string>93750</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>1200</string>
                </property>
               </item>
@@ -101,6 +106,11 @@
               <item>
                <property name="text">
                 <string>8</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>9</string>
                </property>
               </item>
              </widget>
@@ -638,22 +648,6 @@
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="0">
-         <widget class="QTextEdit" name="Send_Window">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="font">
-           <font>
-            <family>Arial</family>
-            <pointsize>14</pointsize>
-           </font>
           </property>
          </widget>
         </item>
@@ -1793,6 +1787,22 @@
           </property>
          </widget>
         </item>
+        <item row="6" column="0">
+         <widget class="QTextBrowser" name="Reveive_data_display">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="font">
+           <font>
+            <family>Arial</family>
+            <pointsize>14</pointsize>
+           </font>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
      </layout>
@@ -1814,7 +1824,7 @@
      <x>0</x>
      <y>0</y>
      <width>907</width>
-     <height>25</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">
